@@ -1,45 +1,37 @@
-#include <Adafruit_Sensor.h>
-#include <Adafruit_DHT.h>
-
-#define DHT_PIN  6
-#define DHT_TYPE DHT11
+#include <Grove_Temperature_And_Humidity_Sensor.h>
+#include <JsonParserGeneratorRK.h>
 
 #define DELAY_TIME 30000  // 30 seconds
 
+#define DHT_PIN  D3
+
+DHT dht(DHT_PIN);
+
 // For recordings readings from the sensor
-float humidity;
-float temperature;
+double temp;
+double hum;
 
-// For sending the readings to thingspeak
-String temp;
-String hum;
+void postEventPayload(float temp, float humidity) {
+    
+    JsonWriterStatic<256> jw;
+    
+    {
+        JsonWriterAutoObject obj(&jw);
+        jw.insertKeyValue("temp", temp);
+        jw.insertKeyValue("hum", humidity);
+    }
 
-DHT dht(DHT_PIN, DHT_TYPE);
+    Particle.publish("dht11", jw.getBuffer(), PRIVATE);
+}
 
 void setup() {
-    Serial.begin(9600);
+    dht.begin();
     pinMode(DHT_PIN, INPUT);
 }
 
 void loop() {
-    
-    humidity = dht.getHumidity();
-    temperature = dht.getTempCelcius();
-    
-    temp = String(temperature);
-    hum = String(humidity);
-    
-    Particle.publish("temp", temp, PRIVATE);
-    Particle.publish("hum", hum, PRIVATE);
-    
-    // Also print to monitor on the serial monitor
-    // via the particle CLI. Command:
-    // "particle serial monitor"
-    Serial.print("{Temp: ");
-    Serial.print(temp);
-    Serial.print(", Hum: ");
-    Serial.print(hum);
-    Serial.println("}");
-    
+    temp = dht.getTempCelcius();
+    hum = dht.getHumidity();
+    postEventPayload(temp, hum);
     delay(DELAY_TIME);
 }
