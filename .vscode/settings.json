@@ -1,0 +1,5 @@
+{
+    "particle.targetDevice": "vampire-narwhal",
+    "particle.firmwareVersion": "1.4.4",
+    "particle.targetPlatform": "argon"
+}
