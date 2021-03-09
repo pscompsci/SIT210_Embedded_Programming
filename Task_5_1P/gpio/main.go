@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	pin = rpio.Pin(10)
+	pin = rpio.Pin(10) // Physical pin 19 on the RPi
 )
 
 func main() {
