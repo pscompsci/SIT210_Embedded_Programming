@@ -70,6 +70,7 @@ class Application(tk.Frame):
         self.Exit['command'] = self.exit
         self.Exit.pack(side=tk.LEFT, padx=10, pady=15)
 
-root = tk.Tk()
-app = Application(10, master=root)
-app.mainloop()
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = Application(10, master=root)
+    app.mainloop()
