@@ -1,0 +1,150 @@
+<!DOCTYPE>
+<html lang="en">
+
+<head>
+    <title>Task 4.2HD - Particle Function</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- BANNER FOR PAGE -->
+        <div class="media p-3">
+            <img class="align-self-center mr-3" src="logo.png" alt="Traffic Light Control">
+            <div class="media-body">
+                <h1 class="Display-2">Traffic Control</h1>
+            </div>
+        </div>
+
+        <!-- MONITORING DASHBOARD -->
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Criteria</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Traffic Light Status</td>
+                    <td id="statusCell"><span id="deviceStatus"></span></td>
+                </tr>
+                <tr>
+                    <td>Current Active Light</td>
+                    <td><span id="activeLight"></span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- LIGHT CONTROLLER -->
+        <div class="bg-light p-3 text-center">
+            <form>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="color" id="redRadio" value="red">
+                    <label class="form-check-label text-monospace" for="redRadio">
+                        Red&nbsp;&nbsp;&nbsp;
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="color" id="yellowRadio" value="yellow">
+                    <label class="form-check-label text-monospace" for="yellowRadio">
+                        Yellow
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="color" id="greenRadio" value="green">
+                    <label class="form-check-label text-monospace" for="greenRadio">
+                        Green&nbsp;
+                    </label>
+                </div>
+                <br>
+                <button type="button" class="btn btn-primary" id="trafficLightSubmit">Submit</button>
+                <button type="button" class="btn btn-danger" id="resetTrafficLight">Reset</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        let deviceID = "e00fce6838f249d6f6bbf8ea";
+        let accessToken = "24b18d043ccce783ccbce9eba611cf779744f835";
+
+        function checkStatus() {
+            var requestURL = "https://api.particle.io/v1/devices/" + deviceID + "/ping";
+            $.ajax({
+                url: requestURL,
+                type: 'PUT',
+                data: { access_token: accessToken },
+                success: function (result) {
+                    console.log(result);
+                    var online = result["online"];
+                    if (online) {
+                        $("#deviceStatus").text('ONLINE');
+                        $('#statusCell').css('background-color', '#008000');
+                    } else {
+                        $("#deviceStatus").text('OFFLINE');
+                        $('#statusCell').css('background-color', '#b22222');
+                    }
+                },
+                error: function (jqHXR, textStatus, errorThrown) {
+                    $("#deviceStatus").text('UNREACHABLE');
+                    $('#statusCell').css('background-color', '#b22222');
+                    setActive("OFF");
+                    $('.form-check').find('form-check-input').removeClass('active')
+                        .end().find('[type="radio"]').prop('checked', false);
+                },
+                timeout: 5000
+            });
+        }
+
+        function setActive(message) {
+            $("#activeLight").text(message.toUpperCase());
+        }
+
+        $(document).ready(function () {
+            $("#activeLight").text("OFF");
+
+            checkStatus();
+            setInterval(checkStatus, 60000);
+
+            $("#trafficLightSubmit").click(function () {
+                var selected = $("input[name='color']:checked").val();
+                var requestURL = "https://api.particle.io/v1/devices/" + deviceID + "/traffic_light";
+                $.post(requestURL, { color: selected, access_token: accessToken })
+                    .done(function (result) {
+                        console.log(result);
+                        var success = result["return_value"];
+                        if (success === 1) {
+                            setActive(selected);
+                        } else {
+                            setActive("Communication Error");
+                        }
+                    });
+            });
+
+            $("#resetTrafficLight").click(function () {
+                var requestURL = "https://api.particle.io/v1/devices/" + deviceID + "/traffic_light";
+                $.post(requestURL, { color: "off", access_token: accessToken })
+                    .done(function (data) {
+                        console.log(data);
+                        setActive("OFF");
+                        $('.form-check').find('form-check-input').removeClass('active')
+                            .end().find('[type="radio"]').prop('checked', false);
+                    });
+            });
+        });
+    </script>
+</body>
+
+</html>
